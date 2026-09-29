@@ -1,44 +1,33 @@
-<!DOCTYPE html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>HTML TO APK BUILDER V10.9</title>
-<style>
-body{background:#000;color:#0f0;font-family:monospace;padding:12px;max-width:900px;margin:auto}
+<style>body{background:#000;color:#0f0;font-family:monospace;padding:12px;max-width:700px;margin:auto}
 h1{text-align:center;border:2px solid #0f0;padding:12px;border-radius:12px;box-shadow:0 0 15px #0f0}
-textarea{width:100%;height:350px;background:#0e0e0e;color:#0f0;border:2px solid #0f0;border-radius:10px;padding:10px;font-size:12px}
+textarea{width:100%;height:400px;background:#111;color:#0f0;border:2px solid #0f0;border-radius:10px;padding:10px;box-sizing:border-box}
 input{width:100%;padding:12px;margin:6px 0;background:#111;color:#0f0;border:2px solid #0f0;border-radius:8px;box-sizing:border-box}
-.btn{width:100%;padding:16px;background:#0f0;color:#000;font-weight:900;font-size:18px;border:none;border-radius:10px;cursor:pointer;margin-top:8px}
-#log{background:#111;border:1px solid #333;padding:12px;border-radius:8px;margin-top:12px;white-space:pre-wrap}
-a{color:#0ff}
-</style></head><body>
-<h1>⚡ HTML TO APK BUILDER</h1>
-<p style="text-align:center">Engine DATA HK V10.9 - Upload HTML jadi APK</p>
+.btn{width:100%;padding:16px;background:#0f0;color:#000;font-weight:900;font-size:18px;border:none;border-radius:10px;margin-top:10px}
+#log{margin-top:12px;background:#111;padding:12px;border-radius:8px;white-space:pre-wrap;border:1px solid #333}
+a{color:#0ff}</style></head><body>
+<h1>HTML TO APK BUILDER</h1>
 <input id="appname" value="DATA HK V10.9" placeholder="Nama APK">
-<input id="pkg" value="com.bagus4d.apk" placeholder="Package">
-<textarea id="htmlcode"><!DOCTYPE html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DATA HK V10.9</title></head>
-<body><h1>DATA HK V10.9 - GANTI INI DENGAN HTML ASLI KAMU</h1></body></html>
-</textarea>
+<textarea id="code" placeholder="Paste HTML DATA HK kamu disini (full)"></textarea>
 <button class="btn" onclick="build()">🚀 BUILD APK SEKARANG</button>
-<div id="log">Siap build. Paste HTML asli kamu di atas lalu klik BUILD.</div>
+<div id="log">Paste HTML kamu lalu klik Build.</div>
 <script>
 let token=localStorage.getItem('gh_token')||'';
-function build(){
- const html=document.getElementById('htmlcode').value;
- const name=document.getElementById('appname').value;
+async function build(){
+ const html=document.getElementById('code').value;
  const log=document.getElementById('log');
- if(html.length<50){alert('HTML terlalu pendek');return}
- if(!token){token=prompt('Masukkan GitHub Token ghp_xxx (buat di github.com/settings/tokens -> centang repo):'); if(!token)return; localStorage.setItem('gh_token',token);}
- log.innerHTML='⏳ Uploading...';
- (async()=>{
-   try{
-     const get=await fetch('https://api.github.com/repos/zxcvsbnm1/html-to-apk-builder/contents/app/src/main/assets/index.html',{headers:{Authorization:`token ${token}`}});
-     const f=await get.json();
-     const content=btoa(unescape(encodeURIComponent(html)));
-     const put=await fetch('https://api.github.com/repos/zxcvsbnm1/html-to-apk-builder/contents/app/src/main/assets/index.html',{method:'PUT',headers:{Authorization:`token ${token}`,'Content-Type':'application/json'},body:JSON.stringify({message:`Build ${name}`,content:content,sha:f.sha})});
-     const r=await put.json();
-     if(r.commit){log.innerHTML=`✅ BERHASIL! Commit ${r.commit.sha.substring(0,7)}\n\nBuka: <a href="https://github.com/zxcvsbnm1/html-to-apk-builder/actions" target="_blank">Actions</a>\nTunggu 2 menit -> Download APK di Artifacts`; window.open('https://github.com/zxcvsbnm1/html-to-apk-builder/actions','_blank');}else{log.innerText='Gagal: '+JSON.stringify(r).slice(0,400); localStorage.removeItem('gh_token');}
-   }catch(e){log.innerText='Error: '+e.message;}
- })();
+ if(html.length<100){alert('HTML terlalu pendek! Paste HTML asli');return}
+ if(!token){token=prompt('Buat Token di github.com/settings/tokens (centang REPO) lalu paste:'); if(!token)return; localStorage.setItem('gh_token',token);}
+ log.textContent='⏳ Uploading HTML ke GitHub...';
+ try{
+  const get=await fetch('https://api.github.com/repos/zxcvsbnm1/html-to-apk-builder/contents/app/src/main/assets/index.html',{headers:{Authorization:'token '+token}});
+  const j=await get.json();
+  const content=btoa(unescape(encodeURIComponent(html)));
+  const put=await fetch('https://api.github.com/repos/zxcvsbnm1/html-to-apk-builder/contents/app/src/main/assets/index.html',{method:'PUT',headers:{Authorization:'token '+token,'Content-Type':'application/json'},body:JSON.stringify({message:'Build '+Date.now(),content:content,sha:j.sha})});
+  const r=await put.json();
+  if(r.commit){log.innerHTML='✅ BERHASIL! Commit: '+r.commit.sha.substring(0,7)+'\n\nTunggu 2 menit lalu download APK di:\n<a href="https://github.com/zxcvsbnm1/html-to-apk-builder/actions" target="_blank">github.com/zxcvsbnm1/html-to-apk-builder/actions -> Artifacts</a>'; window.open('https://github.com/zxcvsbnm1/html-to-apk-builder/actions','_blank');}
+  else{log.textContent='GAGAL: '+JSON.stringify(r).slice(0,500); localStorage.removeItem('gh_token');}
+ }catch(e){log.textContent='Error: '+e.message; localStorage.removeItem('gh_token');}
 }
-</script>
-</body></html>
+</script></body></html>
