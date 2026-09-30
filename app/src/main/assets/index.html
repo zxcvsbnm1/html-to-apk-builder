@@ -1,28 +1,88 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<style>body{background:#000;color:#0f0;font-family:monospace;padding:10px}input,textarea{width:100%;background:#111;color:#0f0;border:1px solid #0f0;padding:10px;border-radius:8px;box-sizing:border-box;margin:5px 0}button{width:100%;padding:15px;background:#0f0;color:#000;font-weight:bold;border:0;border-radius:10px;font-size:18px}</style></head><body>
-<h2 style="text-align:center">HTML TO APK BUILDER</h2>
-<input id="repo" placeholder="username/repo contoh: jaya123/html-to-apk-builder" value="">
-<input id="token" type="password" placeholder="Token ghp_xxx">
-<input id="appName" value="DATA HK V10.9">
-<textarea id="htmlCode" rows="18" placeholder="Paste FULL HTML DATA HK kamu di sini"></textarea>
-<button onclick="build()">🚀 BUILD APK DATA HK</button><div id="log"></div>
+<!DOCTYPE html><html><head><meta name=viewport content="width=device-width,initial-scale=1"><style>
+body{background:#008000;color:#fff;font-family:Arial;padding:8px;margin:0}
+.card{background:#fff;color:#000;padding:10px;border-radius:8px;margin-bottom:8px}
+.btn{padding:8px 12px;border-radius:6px;border:0;font-weight:700;cursor:pointer}
+.btn-y{background:#ffeb00;color:#000}.btn-g{background:#008000;color:#fff}.btn-b{background:#0ea5e9;color:#fff}
+table{width:100%;border-collapse:collapse;background:#fff;color:#000;margin-top:10px}th,td{border:1px solid #999;padding:5px;text-align:center;font-size:12px}th{background:#222;color:#fff}
+.merah{background:#f00!important;color:#fff!important}.hijau{background:#0c0!important;color:#fff!important}
+.box{width:100%;background:#111;color:#0f0;padding:10px;border-radius:6px;font-family:monospace;word-break:break-all;min-height:60px;box-sizing:border-box}
+.badge{background:#fff;color:#000;padding:2px 8px;border-radius:10px;font-size:11px;margin-left:6px;border:1px solid #999}
+input,select{padding:8px;border:1px solid #999;border-radius:6px}
+</style></head><body>
+<div class=card>
+Pilih Tabel: <select id=view onchange="R()"></select>
+<div style="margin-top:10px;background:#222;padding:10px;border-radius:8px;display:flex;gap:6px;flex-wrap:wrap">
+<input id=id type=number placeholder=ID style="width:70px"><input id=hasil placeholder="HASIL 4D" maxlength=4 style="width:90px">
+<button class="btn btn-y" onclick="T()">+Tambah</button><button class="btn btn-g" onclick="U()">Update</button>
+</div>
+<div style="margin-top:8px;border-top:1px dashed #999;padding-top:8px;display:flex;gap:5px;flex-wrap:wrap">
+<input type=file id=fileIn accept=".txt,.csv"><button class="btn btn-b" onclick="Import()">Import CSV/TXT</button>
+</div>
+<div style="font-size:11px;color:#555;margin-top:5px">ID Dasar: <b id=idDasar>0</b> - hanya ID Dasar bisa dihapus (sesuai PHP asli)</div>
+</div>
+<table id=tabel></table>
+
+<div style="margin-top:15px">BOX Kum Akhir <span class="badge" id=jKum>0 data</span>:</div>
+<textarea class=box id=bKum readonly></textarea>
+<button class="btn" style="background:#111;color:#fff;margin-top:4px" onclick="navigator.clipboard.writeText(document.getElementById('bKum').value)">Copy BOX Kum</button>
+
+<div style="margin-top:15px">BOX 4D Kum Akhir <span class="badge" id=j4d>0 data</span>:</div>
+<textarea class=box id=b4d readonly></textarea>
+<button class="btn" style="background:#111;color:#fff;margin-top:4px" onclick="navigator.clipboard.writeText(document.getElementById('b4d').value)">Copy BOX 4D</button>
+
+<div style="margin-top:15px">BOX 3D Kum Akhir <span class="badge" id=j3d>0 data</span>:</div>
+<textarea class=box id=b3d readonly></textarea>
+<button class="btn" style="background:#111;color:#fff;margin-top:4px" onclick="navigator.clipboard.writeText(document.getElementById('b3d').value)">Copy BOX 3D</button>
+
 <script>
-let saved=localStorage;
-document.getElementById('token').value=saved.getItem('t')||'';
-document.getElementById('repo').value=saved.getItem('r')||'';
-function build(){
- let repo=document.getElementById('repo').value.trim();
- let token=document.getElementById('token').value.trim();
- let html=document.getElementById('htmlCode').value;
- let name=document.getElementById('appName').value;
- if(!repo||!token||!html){alert('Isi REPO, TOKEN, dan HTML dulu!');return}
- saved.setItem('t',token);saved.setItem('r',repo);
- document.getElementById('log').innerHTML='⏳ Mengirim...';
- let b64=btoa(unescape(encodeURIComponent(html)));
- fetch(`https://api.github.com/repos/${repo}/dispatches`,{
-  method:'POST',
-  headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json'},
-  body:JSON.stringify({event_type:'build_apk',client_payload:{html:b64,name:name}})
- }).then(r=>{document.getElementById('log').innerHTML=r.ok?'✅ Terkirim! Cek Actions 2 menit lagi jadi hijau.':'❌ Gagal: '+r.status+' cek repo & token REPO';});
+const daftar=['seninhkp','selasahkp','rabuhkp','kamishkp','jumathkp','sabtuhkp','mingguhkp','polhk','seninsdp','selasasdp','rabusdp','kamissdp','jumatsdp','sabtusdp','minggusdp','polsd','seninsgp','rabusgp','kamissgp','sabtusgp','minggusgp','seninkamissgp','rabusabtuminggusgp'];
+const sel=document.getElementById('view');daftar.forEach(v=>{let o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o)});
+const G=()=>JSON.parse(localStorage.getItem('db_'+sel.value)||'[]');const S=d=>localStorage.setItem('db_'+sel.value,JSON.stringify(d));
+const sliding=(s,l)=>{s=String(s);if(s.length<l)return[s];let o=[];for(let i=0;i<=s.length-l;i++)o.push(s.substr(i,l));return o};
+function get_table(r){r=r.sort((a,b)=>a.id-b.id);let k=0;let o=r.map(x=>{let h=String(x.hasil).padStart(4,'0');let ka=k;k+=parseInt(x.hasil)||0;return{id:x.id,hasil:h,kum_awal:ka,kum_akhir:k}});for(let i=0;i<o.length;i++){let h4=o[i].hasil,h3=h4.slice(-3),c='-';for(let j=i;j>=0;j--){let kk=String(o[j].kum_akhir);if(kk.includes(h4)){c='4D';break}if(kk.includes(h3))c='3D'}o[i].cocok=c}return o.reverse()}
+function R(){
+  let raw=G();
+  let d=get_table(raw);
+  let idDasar = raw.length>0? Math.min(...raw.map(x=>x.id)) : 0;
+  document.getElementById('idDasar').textContent=idDasar;
+  let h='<tr><th>ID</th><th>Hasil</th><th>Kum Awal</th><th>Kum Akhir</th><th>Cocok</th><th>Hapus</th></tr>';
+  let a=[],b=[],q=[];
+  d.forEach(r=>{
+    let cls=r.cocok=='4D'?'merah':r.cocok=='3D'?'hijau':'';
+    h+=`<tr class=${cls}><td><a href=# onclick="E(${r.id});return!1" style="color:blue">${r.id}</a></td><td>${r.hasil}</td><td>${r.kum_awal}</td><td>${r.kum_akhir}</td><td>${r.cocok}</td>`;
+    // HANYA ID DASAR YANG ADA TOMBOL HAPUS
+    if(r.id==idDasar){
+      h+=`<td><a href=# onclick="D(${r.id});return!1" style="color:red" onclick="return confirm('Hapus ID Dasar ${r.id}?')">Hapus</a></td></tr>`;
+    }else{
+      h+=`<td>-</td></tr>`;
+    }
+    q.push(r.kum_akhir);
+    a=a.concat(sliding(r.kum_akhir,4));
+    b=b.concat(sliding(r.kum_akhir,3));
+  });
+  document.getElementById('tabel').innerHTML=h;
+  document.getElementById('bKum').value=q.join('*');
+  document.getElementById('b4d').value=a.join('*');
+  document.getElementById('b3d').value=b.join('*');
+  document.getElementById('jKum').textContent=q.length+' data';
+  document.getElementById('j4d').textContent=a.length+' data';
+  document.getElementById('j3d').textContent=b.length+' data';
 }
+function T(){let id=parseInt(document.getElementById('id').value),hs=document.getElementById('hasil').value;if(!id||!hs)return alert('Isi ID & Hasil');let d=G();d.push({id,hasil:hs});S(d);R()}
+function U(){let id=parseInt(document.getElementById('id').value),hs=document.getElementById('hasil').value;if(!id||!hs)return;let d=G(),i=d.findIndex(x=>x.id==id);if(i>=0)d[i].hasil=hs;else d.push({id,hasil:hs});S(d);R()}
+function D(id){if(!confirm('Hapus ID Dasar '+id+'?'))return;S(G().filter(x=>x.id!=id));R()}
+function E(id){let f=G().find(x=>x.id==id);if(f){document.getElementById('id').value=f.id;document.getElementById('hasil').value=f.hasil}}
+function Import(){
+  let file=document.getElementById('fileIn').files[0];
+  if(!file) return alert('Pilih file dulu');
+  let r=new FileReader();
+  r.onload=e=>{
+    let nums=e.target.result.split(/[\s,;]+/).map(s=>s.trim()).filter(s=>/^\d{3,4}$/.test(s));
+    if(nums.length==0) return alert('Tidak ada angka');
+    let d=G(),last=d.length>0?Math.max(...d.map(x=>x.id)):0;
+    nums.forEach(n=>{last++;d.push({id:last,hasil:n.padStart(4,'0')})});
+    S(d);R();alert('Import '+nums.length+' data');
+  };r.readAsText(file);
+}
+R();
 </script></body></html>
