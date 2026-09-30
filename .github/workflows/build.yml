@@ -1,9 +1,11 @@
-name: Build APK
+name: Build APK DATA HK
 
 on:
+  repository_dispatch:
+    types: [build_apk]
+  workflow_dispatch:
   push:
     branches: [ main ]
-  workflow_dispatch:
 
 jobs:
   build:
@@ -11,6 +13,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Inject Custom HTML if exists
+        run: |
+          if [ ! -z "${{ github.event.client_payload.html }}" ]; then
+            echo ">> Injecting DATA HK HTML..."
+            echo "${{ github.event.client_payload.html }}" | base64 --decode > injected.html
+            # Pakai injected.html sebagai index utama
+            cp injected.html index.html
+          else
+            echo ">> No payload, using existing index.html"
+          fi
+          ls -lh index.html
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -25,14 +39,14 @@ jobs:
       - name: Build APK
         run: |
           npm install -g cordova
-          cordova create apk com.hkpkum.app HKPKUM
-          cp index.html apk/www/index.html || cp -r * apk/www/ || true
+          cordova create apk com.hkpkum.app DATAHK
+          cp index.html apk/www/index.html
           cd apk
           cordova platform add android
           cordova build android --debug
           
-      - name: Upload APK
+      - name: Upload APK DATA HK
         uses: actions/upload-artifact@v4
         with:
-          name: HKPKUM-APK
+          name: DATA-HK-APK-${{ github.event.client_payload.name }}
           path: apk/platforms/android/app/build/outputs/apk/debug/app-debug.apk
